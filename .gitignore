@@ -2,3 +2,5 @@ work/
 .nextflow*
 results/
 my_results/
+test_data/blast/db/
+results/
