@@ -15,3 +15,6 @@ BLASTDB Version: 5
 
 Volumes:
 	/home/isaac/projects/vaccine-pipeline/test_data/blast/db/toy_db
+
+## Week 3 deliverable
+Pipeline: MAKEBLASTDB -> BLASTP -> PARSE_BLAST (e-value cutoff 1e-5), completed 2026-10-13
