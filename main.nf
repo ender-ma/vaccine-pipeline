@@ -4,6 +4,31 @@
  * Week 3: FASTA -> BLAST database -> blastp -> Python parser
  */
 
+process FASTA_QC {
+
+    tag "${fasta.simpleName}"
+
+    publishDir "${params.outdir}/qc", mode: 'copy'
+
+    errorStrategy { task.exitStatus == 2 ? 'ignore' : 'retry' }
+    maxRetries 2
+
+    input:
+    path fasta
+
+    output:
+    path fasta,                           emit: validated
+    path "${fasta.simpleName}_qc.tsv",    emit: report
+
+    script:
+    """
+    fasta_qc.py \\
+	--input ${fasta} \\
+        --min-length ${params.min_length} \\
+        > ${fasta.simpleName}_qc.tsv
+    """
+}
+
 process MAKEBLASTDB {
     input:
     path db_fasta
@@ -56,7 +81,9 @@ workflow {
     db_fasta_ch = channel.fromPath(params.db_fasta, checkIfExists: true)
     query_ch    = channel.fromPath(params.query,    checkIfExists: true)
 
+    FASTA_QC(query_ch)
+
     MAKEBLASTDB(db_fasta_ch)
-    BLASTP(query_ch, MAKEBLASTDB.out.db.first())
+    BLASTP(FASTA_QC.out.validated, MAKEBLASTDB.out.db.first())
     PARSE_BLAST(BLASTP.out.hits)
 }
