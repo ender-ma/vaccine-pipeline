@@ -22,3 +22,6 @@ results/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Generated BLAST databases (MAKEBLASTDB builds these at runtime)
+test_data/blast/db/
