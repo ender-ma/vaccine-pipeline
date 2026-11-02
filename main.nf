@@ -62,18 +62,83 @@ process BLASTP {
 }
 
 process PARSE_BLAST {
-    publishDir params.outdir, mode: 'copy'
+    publishDir "${params.outdir}/parsed", mode: 'copy'
 
     input:
-    tuple path(query), path(hits)
+    tuple path(query), path(blast_out)
 
     output:
-    path "${query.baseName}.filtered.tsv", emit: filtered
-    path "${query.baseName}.summary.json", emit: summary
+    path "${query.baseName}.filtered.tsv",  emit: hits
+    path "${query.baseName}.summary.json",  emit: summary
 
     script:
     """
-    parse_blast.py ${hits} ${query} --evalue ${params.evalue} --prefix ${query.baseName}
+    parse_blast.py ${blast_out} ${query} \\
+        --evalue ${params.evalue} \\
+        --prefix ${query.baseName}
+    """
+}
+
+process FILTER_CANDIDATES {
+
+    tag "${hits.simpleName}"
+
+    publishDir "${params.outdir}/candidates", mode: 'copy'
+
+    errorStrategy { task.exitStatus == 2 ? 'ignore' : 'retry' }
+    maxRetries 2
+
+    input:
+    path hits
+    path query
+
+    output:
+    path "candidates.json", emit: json
+    path "candidates.tsv",  emit: tsv
+
+    script:
+    """
+    BLAST_VERSION=\$(blastp -version | head -n 1)
+
+    filter_candidates.py \\
+        --hits ${hits} \\
+        --query ${query} \\
+        --out-json candidates.json \\
+        --out-tsv candidates.tsv \\
+        --min-identity ${params.min_identity} \\
+        --max-evalue ${params.max_evalue} \\
+        --min-align-length ${params.min_align_length} \\
+        --blast-version "\$BLAST_VERSION"
+    """
+}
+
+process FILTER_HITS {
+
+    tag "${hits.simpleName}"
+
+    publishDir "${params.outdir}/candidates", mode: 'copy'
+
+    errorStrategy { task.exitStatus == 2 ? 'ignore' : 'retry' }
+    maxRetries 2
+
+    input:
+    path hits
+    path query_fasta
+
+    output:
+    path "${hits.simpleName}_filtered.json", emit: json
+    path "${hits.simpleName}_filtered.tsv",  emit: tsv
+
+    script:
+    """
+    filter_hits.py \\
+        --input ${hits} \\
+        --query-fasta ${query_fasta} \\
+        --json-out ${hits.simpleName}_filtered.json \\
+        --tsv-out ${hits.simpleName}_filtered.tsv \\
+        --max-evalue ${params.max_evalue} \\
+        --min-identity ${params.min_identity} \\
+        --min-coverage ${params.min_coverage}
     """
 }
 
@@ -86,4 +151,6 @@ workflow {
     MAKEBLASTDB(db_fasta_ch)
     BLASTP(FASTA_QC.out.validated, MAKEBLASTDB.out.db.first())
     PARSE_BLAST(BLASTP.out.hits)
+
+    FILTER_CANDIDATES(PARSE_BLAST.out.hits, FASTA_QC.out.validated)
 }
