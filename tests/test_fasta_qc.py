@@ -20,12 +20,10 @@ class TestValidation:
     def test_empty_sequence_record_detected(self, tmp_path):
         f = write_fasta(tmp_path, ">p1 no sequence\n\n>p2\nMKTAYIAK\n")
         records = list(fasta_qc.parse_fasta(f))
-        assert any(len(seq) == 0 for _, seq in records)
+        assert any(len(seq) == 0 for _, _, seq, _ in records)
 
     def test_nucleotide_sequence_flagged(self, tmp_path):
         """A DNA string is valid protein syntax — only composition betrays it."""
-        f = write_fasta(tmp_path, ">dna\nATGCGTACGTAGCTAGCTAGCATCGATCGTAGC\n")
-        records = list(fasta_qc.parse_fasta(f))
-        _, seq = records[0]
-        nt_fraction = sum(1 for c in seq.upper() if c in "ACGTUN") / len(seq)
-        assert nt_fraction > 0.9
+        f = write_fasta(tmp_path, ">dna\n" + "ATGC" * 15 + "\n")
+        _, errors = fasta_qc.validate_and_describe(f, min_length=10, max_length=None)
+        assert any("nucleotide" in e for e in errors)
