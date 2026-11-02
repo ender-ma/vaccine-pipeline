@@ -1,6 +1,24 @@
+# Nextflow
 work/
-.nextflow*
+.nextflow/
+.nextflow.log*
+*.html.timeline
+trace.txt
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# Conda
+.conda/
+
+# Results and scratch output
 results/
-my_results/
-test_data/blast/db/
-results/
+*.tmp
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+{
+  "version": "1.2",
+  "dbname": "toy_db",
+  "dbtype": "Protein",
+  "db-version": 5,
+  "description": "test_data/blast/toy_db.fasta",
+  "number-of-letters": 186,
+  "number-of-sequences": 3,
+  "last-updated": "2026-10-03T17:41:00",
+  "number-of-volumes": 1,
+  "bytes-total": 37541,
+  "bytes-to-cache": 326,
+  "files": [
+    "toy_db.pdb",
+    "toy_db.phr",
+    "toy_db.pin",
+    "toy_db.pot",
+    "toy_db.psq",
+    "toy_db.ptf",
+    "toy_db.pto"
+  ]
+}
