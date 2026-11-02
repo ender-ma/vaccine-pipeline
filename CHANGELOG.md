@@ -15,6 +15,7 @@ Format based on Keep a Changelog; versioning follows Semantic Versioning.
   minimum length and a compositional nucleotide heuristic.
 - `bin/filter_candidates.py`: structured candidate records in JSON and TSV.
   Every input query is recorded, including NO_HIT and FAIL_FILTER cases.
+  Outputs are named `<query>.candidates.{json,tsv}`, one pair per query file.
 - `bin/parse_blast.py`: BLAST tabular output parsing.
 - `bin/run_blast.sh` wrapper script for manual BLAST execution.
 - Validation gate: BLASTP consumes only FASTA_QC-validated input.
@@ -37,6 +38,11 @@ Format based on Keep a Changelog; versioning follows Semantic Versioning.
 - Default thresholds are conventional, not validated against any benchmark.
 - The nucleotide heuristic has a known false-positive mode for Gly/Ala/Cys-rich
   proteins.
+- PARSE_BLAST applies the `evalue` cutoff before FILTER_CANDIDATES, so hits it
+  removes are reported as NO_HIT rather than FAIL_FILTER, and `max_evalue`
+  cannot be more permissive than `evalue`.
+- `min_coverage` is not enforced: only FILTER_HITS uses it, and FILTER_HITS is
+  not yet wired into the workflow (`bin/filter_hits.py` is a stub).
 
 ### 2026-10-20
 - `bin/fasta_qc.py`: FASTA input validation (structure, alphabet, duplicate IDs,

@@ -68,8 +68,8 @@ process PARSE_BLAST {
     tuple path(query), path(blast_out)
 
     output:
-    path "${query.baseName}.filtered.tsv",  emit: hits
-    path "${query.baseName}.summary.json",  emit: summary
+    tuple path(query), path("${query.baseName}.filtered.tsv"), emit: hits
+    path "${query.baseName}.summary.json",                     emit: summary
 
     script:
     """
@@ -81,7 +81,7 @@ process PARSE_BLAST {
 
 process FILTER_CANDIDATES {
 
-    tag "${hits.simpleName}"
+    tag "${query.simpleName}"
 
     publishDir "${params.outdir}/candidates", mode: 'copy'
 
@@ -89,12 +89,11 @@ process FILTER_CANDIDATES {
     maxRetries 2
 
     input:
-    path hits
-    path query
+    tuple path(query), path(hits)
 
     output:
-    path "candidates.json", emit: json
-    path "candidates.tsv",  emit: tsv
+    path "${query.baseName}.candidates.json", emit: json
+    path "${query.baseName}.candidates.tsv",  emit: tsv
 
     script:
     """
@@ -103,8 +102,8 @@ process FILTER_CANDIDATES {
     filter_candidates.py \\
         --hits ${hits} \\
         --query ${query} \\
-        --out-json candidates.json \\
-        --out-tsv candidates.tsv \\
+        --out-json ${query.baseName}.candidates.json \\
+        --out-tsv ${query.baseName}.candidates.tsv \\
         --min-identity ${params.min_identity} \\
         --max-evalue ${params.max_evalue} \\
         --min-align-length ${params.min_align_length} \\
@@ -152,5 +151,5 @@ workflow {
     BLASTP(FASTA_QC.out.validated, MAKEBLASTDB.out.db.first())
     PARSE_BLAST(BLASTP.out.hits)
 
-    FILTER_CANDIDATES(PARSE_BLAST.out.hits, FASTA_QC.out.validated)
+    FILTER_CANDIDATES(PARSE_BLAST.out.hits)
 }
